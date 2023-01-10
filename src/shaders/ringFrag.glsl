@@ -1,17 +1,9 @@
 precision highp float;
 uniform float time;
 uniform mat4 modelViewMatrix;
-
 uniform vec3 color1;
 uniform vec3 color2;
-uniform vec3 color3;
-uniform vec3 color4;
-uniform vec3 color5;
-
-uniform float rMult;
-uniform float qMult;
-uniform float vMult;
-
+uniform float ringValue;
 varying vec3 texcoord;
 varying vec3 newnormal;
 
@@ -85,65 +77,43 @@ float psrdnoise(vec3 x, vec3 period, float alpha, out vec3 gradient)
 	return 39.5 * n;
 }
 
-
 //
 //
 //
-
 
 #define NUM_OCTAVES 10
+#define SCALE 0.012
 
-float fbmH(vec3 x, float aconf) {
-	float v = 0.5;
-	float a = 0.4;
+float fbmH(vec3 inX, float inAlphaConf) {
+	float h = 0.0;
+	float H = 1.0/3.0;
+	float G = exp2(-H);
+	float f = SCALE;
+	float a = 1.0;
 	float w = 0.5;
 	vec3 p = vec3(0.0);
+	float alpha = inAlphaConf * time;
+	vec3 g = vec3(0.0, 0.0, 0.0);
 	vec3 g1;
-	float alpha = aconf * time;
-	for (int i = 0; i < NUM_OCTAVES; ++i) {
-		v += a * psrdnoise(x, p, alpha, g1);
-		x = x * 2.0;
-		a *= 0.5;
+	for( int i=0; i<NUM_OCTAVES; i++ )
+	{
+		h += a*psrdnoise(f*inX, p, alpha, g1);
+		f *= 2.0;
+		a *= G;
 	}
-	return v;
+	return h;
 }
 
 void main()
 {
-	//Rescale the texcoords
-	vec3 X = (texcoord + 2.0) / 4.0; 
-	// Warping with FBM
-	vec3 q = vec3(fbmH(X * qMult, 0.03), fbmH(X * qMult, 0.0),fbmH(X * qMult,0.0));
-	vec3 r = vec3(fbmH(X * rMult + q, 0.05), fbmH(X*rMult + q, 0.0), fbmH(X*rMult + q, 0.0));
-	float vh = fbmH(X * vMult * r, 0.0);
-
-	vec3 color;
-	vec3 col1 = color1;
-	vec3 col2 = color2;
+	vec3 pos = texcoord;
+	float distCenter = sqrt(pow(texcoord.x,2.0) + pow(texcoord.y,2.0) + pow(texcoord.z,2.0));
+	//float rescaledValue = ((distCenter - 0.0) / (2.5 - 0.0)) * (2.5 - 1.5) + 1.5;
+	//float rerescaledValue = ((distCenter - 1.5) / (2.5 - 1.5)) * (1.0 - 0.0) + 0.0;
+	float opacity = fbmH(vec3(distCenter)*ringValue,0.0);
+	vec3 color = mix(color1, color2, opacity);
 	
-	vec3 col3 = color3;
-    vec3 col4 = color4;
-    vec3 col5 = color5;
-
-	vec3 col_mix = mix(col3, col4, clamp(r, 0.0, 1.0));
-    col_mix = mix(col_mix, col5, clamp(q, 0.0, 1.0));
-
-	float pos = vh * 2.0 - 1.0;
-	color = mix(col_mix, col1, clamp(pos, 0.0, 1.0));
-	color = mix(color, col2, clamp(-pos, 0.0, 1.0));
-
-	color = (clamp((0.4 * pow(vh,3.) + pow(vh,2.) + 0.5*vh), 0.0, 1.0) * 0.9 + 0.1) * color;
-
-	//Lighting
-	vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0)-vec3(0.0));
-	
-	float ambient = 0.0;
-	float diffuse = mix( max(0.0, dot( lightDir, newnormal)), 1.0, ambient);
-
-	//color = mix(color, vec3(1.0, 0.0, 1.0), opacity);
-	color = diffuse * color;
-
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, opacity);
 	//Gamma correction
-	gl_FragColor.rgb = pow(gl_FragColor.rgb, vec3(1./2.2));
+	gl_FragColor.rgb = pow(gl_FragColor.rgb, vec3(1./2.));
 }
