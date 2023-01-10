@@ -140,10 +140,11 @@ void main()
 	float ambient = 0.0;
 	float diffuse = mix( max(0.0, dot( lightDir, newnormal)), 1.0, ambient);
 
-	//color = mix(color, vec3(1.0, 0.0, 1.0), opacity);
+	//Gamma correction
+	color = pow(color, vec3(1./2.2));
+
 	color = diffuse * color;
 
     gl_FragColor = vec4(color, 1.0);
-	//Gamma correction
-	gl_FragColor.rgb = pow(gl_FragColor.rgb, vec3(1./2.2));
+	
 }
