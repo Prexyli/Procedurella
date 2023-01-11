@@ -1,6 +1,7 @@
 import * as THREE from './utils/three.module.js';
 import { OrbitControls } from './utils/OrbitControls.js';
 import { color, GUI } from './utils/dat.gui.module.js';
+import Stats from './utils/stats.module.js'
 
 let planetVertexShader,
     planetFragmentShader,
@@ -19,6 +20,8 @@ var controls;
 var camera, scene, renderer;
 const skyboxImage = 'space';
 var planetMaterial, atmosphereMaterial, ringMaterial;
+const stats = Stats();
+document.body.appendChild(stats.dom)
 
 let numShaders = 6;
 loadShaders();
@@ -170,7 +173,7 @@ function intialize(){
     ringFolder.addColor(guiControls, 'ringColor2');
     ringFolder.add(guiControls,"ringback");
     gui.add(guiControls, "autorotate");
-    gui.add(guiControls, "speed", 0.001, 0.1);
+    gui.add(guiControls, "speed", 0.001, 1.1);
     
     //Adding a Sphere
     const geometry = new THREE.SphereGeometry(1, 100, 100);
@@ -282,4 +285,5 @@ function animate() {
     controls.update();
     requestAnimationFrame( animate );
     renderer.render(scene, camera);
+    stats.update();
 }
