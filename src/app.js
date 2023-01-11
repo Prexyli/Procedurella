@@ -168,7 +168,7 @@ function intialize(){
     folder.addColor(guiControls, 'color4');
     folder.addColor(guiControls, 'color5');
     var ringFolder = gui.addFolder("Rings");
-    ringFolder.add(guiControls, "ring", 1.0, 1.0);
+    ringFolder.add(guiControls, "ring", 1.0, 6.0);
     ringFolder.addColor(guiControls, 'ringColor1');
     ringFolder.addColor(guiControls, 'ringColor2');
     ringFolder.add(guiControls,"ringback");
