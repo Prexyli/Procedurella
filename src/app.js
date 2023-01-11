@@ -38,6 +38,8 @@ var guiControls = new (function () {
     this.qMult = 1.7;
     this.rMult = 3.0;
     this.vMult = 3.5;
+    this.amplitude = 0.5;
+    this.fbmfunc = true;
 })
 
 function loadShaders() {
@@ -154,6 +156,8 @@ function intialize(){
     planetFolder.add(guiControls, "qMult", 0.0, 10.0);
     planetFolder.add(guiControls, "rMult", 0.0, 10.0);
     planetFolder.add(guiControls, "vMult", 0.0, 10.0);
+    planetFolder.add(guiControls, "amplitude", 0.0, 1.5);
+    planetFolder.add(guiControls, "fbmfunc");
     var folder = gui.addFolder("Colors");
     folder.addColor(guiControls, 'color1');
     folder.addColor(guiControls, 'color2');
@@ -161,7 +165,7 @@ function intialize(){
     folder.addColor(guiControls, 'color4');
     folder.addColor(guiControls, 'color5');
     var ringFolder = gui.addFolder("Rings");
-    ringFolder.add(guiControls, "ring", 1.0, 10.0);
+    ringFolder.add(guiControls, "ring", 1.0, 1.0);
     ringFolder.addColor(guiControls, 'ringColor1');
     ringFolder.addColor(guiControls, 'ringColor2');
     ringFolder.add(guiControls,"ringback");
@@ -182,7 +186,9 @@ function intialize(){
             color5: { value: new THREE.Color(guiControls.color5)},
             qMult: { value: guiControls.qMult},
             rMult: { value: guiControls.rMult},
-            vMult: { value: guiControls.vMult}
+            vMult: { value: guiControls.vMult},
+            amplitude: { value: guiControls.amplitude },
+            fbmfunc: { value: guiControls.fbmfunc }
         },
          vertexShader: planetVertexShader,
          fragmentShader: planetFragmentShader,
@@ -261,6 +267,8 @@ function animate() {
     planetMaterial.uniforms.qMult = { value: guiControls.qMult};
     planetMaterial.uniforms.rMult = { value: guiControls.rMult};
     planetMaterial.uniforms.vMult = { value: guiControls.vMult};
+    planetMaterial.uniforms.amplitude = { value: guiControls.amplitude};
+    planetMaterial.uniforms.fbmfunc = { value: guiControls.fbmfunc};
     planetMaterial.uniforms.color1 = { value: new THREE.Color(guiControls.color1)};
     planetMaterial.uniforms.color2 = { value: new THREE.Color(guiControls.color2)};
     planetMaterial.uniforms.color3 = { value: new THREE.Color(guiControls.color3)};

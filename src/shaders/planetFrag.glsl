@@ -11,6 +11,8 @@ uniform vec3 color5;
 uniform float rMult;
 uniform float qMult;
 uniform float vMult;
+uniform float amplitude;
+uniform bool fbmfunc;
 
 varying vec3 texcoord;
 varying vec3 newnormal;
@@ -95,8 +97,7 @@ float psrdnoise(vec3 x, vec3 period, float alpha, out vec3 gradient)
 
 float fbmH(vec3 x, float aconf) {
 	float v = 0.5;
-	float a = 0.4;
-	float w = 0.5;
+	float a = amplitude;
 	vec3 p = vec3(0.0);
 	vec3 g1;
 	float alpha = aconf * time;
@@ -108,15 +109,46 @@ float fbmH(vec3 x, float aconf) {
 	return v;
 }
 
+float fbm2(vec3 inX, float inAlphaConf) {
+	float h = 0.0;
+	float H = 1.0/3.0;
+	float G = exp2(-H);
+	float f = 0.012;
+	float a = 2.0*amplitude;
+	vec3 p = vec3(0.0);
+	float alpha = inAlphaConf * time;
+	vec3 g;
+	for( int i=0; i<NUM_OCTAVES; i++ )
+	{
+		h += a*psrdnoise(f*inX, p, alpha, g);
+		f *= 2.0;
+		a *= G;
+	}
+	return h;
+}
+
 void main()
 {
 	//Rescale the texcoords
 	vec3 X = (texcoord + 2.0) / 4.0; 
+	float distCenter = sqrt(pow(texcoord.y,2.0));
+	float opacity = fbmH(vec3(distCenter),0.0);
+	opacity *= 10.0;
+	float intpart = floor(opacity);
+	opacity = intpart / 10.0;
 	// Warping with FBM
-	vec3 q = vec3(fbmH(X * qMult, 0.03), fbmH(X * qMult, 0.0),fbmH(X * qMult,0.0));
-	vec3 r = vec3(fbmH(X * rMult + q, 0.05), fbmH(X*rMult + q, 0.0), fbmH(X*rMult + q, 0.0));
-	float vh = fbmH(X * vMult * r, 0.0);
-
+	vec3 q, r;
+	float vh;
+	if(fbmfunc){
+		q = vec3(fbmH(X * qMult, 0.03) , 2.0*fbmH(X * qMult, 0.0), 2.0*fbmH(X * qMult,0.0));
+		r = vec3(fbmH(X * rMult + q, 0.05), fbmH(X*rMult + q, 0.0), fbmH(X*rMult + q, 0.0));
+		vh = fbmH(X * vMult * r, 0.0);
+	}
+	else {
+		q = vec3(fbm2(X * qMult, 0.03) , 2.0*fbm2(X * qMult, 0.0), 2.0*fbm2(X * qMult,0.0));
+		r = vec3(fbmH(X * rMult + q, 0.05), fbmH(X*rMult + q, 0.0), fbmH(X*rMult + q, 0.0));
+		vh = fbm2(X * vMult * r, 0.0);
+	}
 	vec3 color;
 	vec3 col1 = color1;
 	vec3 col2 = color2;
